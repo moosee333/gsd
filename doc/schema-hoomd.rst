@@ -53,7 +53,10 @@ Name                              Category  Type   Size Default Units
 **Configuration**
 :chunk:`configuration/step`                 uint64 1x1  0       number
 :chunk:`configuration/dimensions`           uint8  1x1  3       number
+:chunk:`configuration/spherical`            uint8  1x1  0       bool
 :chunk:`configuration/box`                  float  6x1          *varies*
+:chunk:`configuation/R`                     float  1x1  1.0     length
+
 **Particle data**
 :chunk:`particles/N`              attribute uint32 1x1  0       number
 :chunk:`particles/types`          attribute int8   NTxM ['A']   UTF-8
@@ -68,6 +71,9 @@ Name                              Category  Type   Size Default Units
 :chunk:`particles/velocity`       momentum  float  Nx3  0,0,0   length/time
 :chunk:`particles/angmom`         momentum  float  Nx4  0,0,0,0 quaternion
 :chunk:`particles/image`          momentum  int32  Nx3  0,0,0   number
+:chunk:`particles/quat_l`         property  float  Nx4  1,0,0,0 unit quaternion
+:chunk:`particles/quat_r`         property  float  Nx4  1,0,0,0 unit quaternion
+
 **Bond data**
 :chunk:`bonds/N`                  topology  uint32 1x1  0       number
 :chunk:`bonds/types`              topology  int8   NTxM         UTF-8
@@ -121,6 +127,15 @@ Configuration
 
     Number of dimensions in the simulation. Must be 2 or 3.
 
+.. chunk:: configuration/spherical
+
+    :Type: uint8
+    :Size: 1x1
+    :Default: 0
+    :Units: bool
+
+    If 1, the configuration uses hyperspherical coordinates, cartesian otherwise
+
 .. chunk:: configuration/box
 
     :Type: float
@@ -134,6 +149,14 @@ Configuration
     * `box[0:3]`: :math:`(l_x, l_y, l_z)` the box length in each direction, in length units
     * `box[3:]`: :math:`(xy, xz, yz)` the tilt factors, unitless values
 
+.. chunk:: configuration/sphere
+
+    :Type: float
+    :Size: 1x1
+    :Default: 1.0
+    :Units: length
+
+    Radius of the simulation sphere when :chunk:`configuration/spherical` is 1.
 
 Particle data
 -------------
@@ -253,6 +276,30 @@ Properties
     :Units: unit quaternion
 
     Store the orientation of each particle. In scalar + vector notation, this is
+    :math:`(r, a_x, a_y, a_z)`,
+    where the quaternion is :math:`q = r + a_xi + a_yj + a_zk`. A unit quaternion
+    has the property: :math:`\sqrt{r^2 + a_x^2 + a_y^2 + a_z^2} = 1`.
+
+.. chunk:: particles/quat_l
+
+    :Type: float (32-bit)
+    :Size: Nx4
+    :Default: 1,0,0,0
+    :Units: unit quaternion
+
+    Store the left quaternion of each particle, for use with hyperspherical boundaries. In scalar + vector notation, this is
+    :math:`(r, a_x, a_y, a_z)`,
+    where the quaternion is :math:`q = r + a_xi + a_yj + a_zk`. A unit quaternion
+    has the property: :math:`\sqrt{r^2 + a_x^2 + a_y^2 + a_z^2} = 1`.
+
+.. chunk:: particles/quat_r
+
+    :Type: float (32-bit)
+    :Size: Nx4
+    :Default: 1,0,0,0
+    :Units: unit quaternion
+
+    Store the right quaternion of each particle, for use with hyperspherical boundaries. In scalar + vector notation, this is
     :math:`(r, a_x, a_y, a_z)`,
     where the quaternion is :math:`q = r + a_xi + a_yj + a_zk`. A unit quaternion
     has the property: :math:`\sqrt{r^2 + a_x^2 + a_y^2 + a_z^2} = 1`.

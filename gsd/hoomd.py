@@ -43,19 +43,27 @@ class ConfigurationData(object):
     Attributes:
         step (int): Time step of this frame (:chunk:`configuration/step`).
         dimensions (int): Number of dimensions (:chunk:`configuration/dimensions`).
+        spherical (bool): If true, snapshot stores a hyperspherical coordinates, cartesian otherwise (:chunk:`configuation/spherical`)
+            .. versionadded:: 1.3
         box (numpy.ndarray[float, ndim=1, mode='c']): Box dimensions (:chunk:`configuration/box`)
                                                       - [lx, ly, lz, xy, xz, yz].
+        R (float): Sphere radius for hyperspherical geometry (:chunk:`configuration/R`)
+            .. versionadded:: 1.3
     """
 
     _default_value = OrderedDict();
     _default_value['step'] = numpy.uint64(0);
     _default_value['dimensions'] = numpy.uint8(3);
+    _default_value['spherical'] = False
     _default_value['box'] = numpy.array([1,1,1,0,0,0], dtype=numpy.float32);
+    _default_value['R'] = 1.0
 
     def __init__(self):
         self.step = None;
         self.dimensions = None;
+        self.spherical = None;
         self.box = None;
+        self.R = None;
 
     def validate(self):
         """ Validate all attributes.
@@ -103,6 +111,10 @@ class ParticleData(object):
         velocity (numpy.ndarray[float, ndim=2, mode='c']): Nx3 array defining particle velocities (:chunk:`particles/velocity`).
         angmom (numpy.ndarray[float, ndim=2, mode='c']): Nx4 array defining particle angular momenta (:chunk:`particles/angmom`).
         image (numpy.ndarray[int32, ndim=2, mode='c']): Nx3 array defining particle images (:chunk:`particles/image`).
+        quat_l (numpy.ndarry[float, ndim=2, mode='c']): Nx4 array defining left quaternions (:chunk:`particles/quat_l`).
+            .. versionadded:: 1.3
+        quat_r (numpy.ndarry[float, ndim=2, mode='c']): Nx4 array defining left quaternions (:chunk:`particles/quat_r`).
+            .. versionadded:: 1.3
     """
 
     _default_value = OrderedDict();
@@ -119,6 +131,9 @@ class ParticleData(object):
     _default_value['velocity'] = numpy.array([0,0,0], dtype=numpy.float32);
     _default_value['angmom'] = numpy.array([0,0,0,0], dtype=numpy.float32);
     _default_value['image'] = numpy.array([0,0,0], dtype=numpy.int32);
+    _default_value['quat_l'] = numpy.array([1,0,0,0], dtype=numpy.float32);
+    _default_value['quat_r'] = numpy.array([1,0,0,0], dtype=numpy.float32);
+
 
     def __init__(self):
         self.N = 0;
@@ -134,6 +149,8 @@ class ParticleData(object):
         self.velocity = None;
         self.angmom = None;
         self.image = None;
+        self.quat_l = None;
+        self.quat_r = None;
 
     def validate(self):
         """ Validate all attributes.
@@ -184,6 +201,12 @@ class ParticleData(object):
         if self.image is not None:
             self.image = numpy.ascontiguousarray(self.image, dtype=numpy.int32);
             self.image = self.image.reshape([self.N, 3]);
+        if self.quat_l is not None:
+            self.quat_l = numpy.ascontiguousarray(self.quat_l, dtype=numpy.float32);
+            self.quat_l = self.quat_l.reshape([self.N, 4])
+        if self.quat_r is not None:
+            self.quat_r = numpy.ascontiguousarray(self.quat_r, dtype=numpy.float32);
+            self.quat_r = self.quat_r.reshape([self.N, 4])
 
 class BondData(object):
     """ Store bond data chunks.
@@ -796,5 +819,5 @@ def open(name, mode='rb'):
                          mode=mode,
                          application='gsd.hoomd ' + gsd.__version__,
                          schema='hoomd',
-                         schema_version=[1,2]);
+                         schema_version=[1,3]);
     return HOOMDTrajectory(gsdfileobj);
